@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<manifest>
+  <control namespace="PAComponents" constructor="DatePicker" version="0.0.1" display-name-key="DateRangePicker" description-key="DateRangePicker_Desc" control-type="standard">
+    <external-service-usage enabled="false"/>
+
+    <!-- INPUTS -->
+    <property name="triggerReset"
+              display-name-key="Trigger Reset"
+              description-key="Boolean to reset the selection (like Reset() in Power Apps)"
+              of-type="TwoOptions" usage="input" required="false" />
+
+    <property name="allowTime"
+              display-name-key="Allow Time Selection"
+              description-key="Show time pickers alongside date selection"
+              of-type="TwoOptions" usage="input" required="false" />
+
+    <!-- OUTPUTS -->
+    <property name="startDate"
+              display-name-key="Start Date"
+              description-key="Selected start date/time"
+              of-type="DateAndTime.DateAndTime" usage="output" required="false" />
+
+    <property name="endDate"
+              display-name-key="End Date"
+              description-key="Selected end date/time"
+              of-type="DateAndTime.DateAndTime" usage="output" required="false" />
+
+    <resources>
+      <code path="index.ts" order="1" />
+      <css path="css/DateRangePicker.css" order="1" />
+    </resources>
+  </control>
+</manifest>
