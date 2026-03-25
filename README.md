@@ -64,19 +64,41 @@ npm start watch
 
 Toda la lógica de empaquetado final ocurre obligatoriamente en la sub-carpeta de la solución donde reside el archivo `.cdsproj`.
 
-### Método 1: Empaquetar a .zip Estándar (Recomendado para Producción)
-Usa este método para mover tu componente como una capa controlada entre Entornos (DEV > QA > PROD).
+### Método 1: Generar el archivo .zip de Solución (Para Producción)
 
-1. Navega usando la consola hacia la carpeta *Solutions* (o donde sea que reside el `.cdsproj`).
+Para empaquetar el componente en un `.zip` importable en Power Apps, debes crear un proyecto de solución que compile tu código usando MSBuild. Sigue exactamente estos pasos:
+
+1. **Crea la carpeta de soluciones** (por ejemplo, `Solutions`), dirígete hacia esa carpeta y abre una terminal dentro de ella:
 ```bash
-cd "d:\Proyectos\PA React Componentes\DatePicker\DatePicker\Solutions"
+mkdir Solutions
+cd Solutions
 ```
-2. Inicia la compilación del ensamblado de .NET:
+
+2. **Inicializa el proyecto de solución**.
+Ejecuta el siguiente comando. (*Nota: El `--publisher-name` y asociado a tu nombre, como "Cosme", y el `--publisher-prefix` son completamente editables. ¡Cámbialos si necesitas que coincidan con los de tu entorno real!*):
+```bash
+pac solution init --publisher-name Cosme --publisher-prefix cosme
+```
+
+3. **Vincula la solución con el componente**.
+Agrega la referencia que apunta hacia la ubicación de tu código fuente (el archivo `.pcfproj`). Si creaste la sub-carpeta a 2 niveles de profundidad como suele pasar, el comando exacto es:
+```bash
+pac solution add-reference --path ..\..\
+```
+
+4. **Restaura dependencias y compila**.
+Por último, ejecuta uno de los siguientes comandos para restaurar el proyecto:
 ```bash
 dotnet build
-# Alternativa: msbuild /t:build /restore
+# O también puedes usar:
+msbuild /t:restore
 ```
-3. Sube tu componente yendo a **[make.powerapps.com](https://make.powerapps.com/) > Soluciones > Importar** y toma el archivo `.zip` que se generó adentro de la carpeta `\bin\Debug\` (o `Release`).
+Y para generar el paquete final, simplemente ejecuta:
+```bash
+msbuild
+```
+
+5. ¡Listo! Al terminar de compilar, abre el explorador de Windows, dirígete a la ruta `Solutions\bin\Debug\` (o la versión de `Release`), y el **archivo `.zip`** que encontrarás allí es el que importarás en **[make.powerapps.com](https://make.powerapps.com/) > Soluciones > Importar**.
 
 ### Método 2: Despliegue CLI Directo (En Desarrollo Activo y Testing real)
 Si tienes el control `pac auth create` autenticado hacia tu perfil de Power Apps, puedes ahorrar saltos inyectando el componente pre-compilado directamente contra un entorno existente sin manipular archivos `.zip`:
