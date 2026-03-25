@@ -1,6 +1,6 @@
 .pcf-dp-container {
     position: relative;
-    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    font-family: inherit; /* Hereda la fuente nativa de Power Apps */
     width: 100%;
     height: 100%;
 }
@@ -15,11 +15,14 @@
     width: 100%;
     height: 100%;
     padding: 10px 14px;
-    border: 1px solid #d1d5db;
-    border-radius: 8px;
+    
+    /* MODIFICABLE: Borde, radio y fondo del Input principal */
+    border: 1px solid #000000; /* Color del borde por defecto */
+    border-radius: 5px;        /* Radio (redondeo de esquinas) del campo de texto */
+    background: #ffffff;       /* Color de fondo del campo de texto */
+    
     font-size: 14px;
     cursor: pointer;
-    background: #ffffff;
     box-shadow: 0 1px 2px rgba(0,0,0,0.05);
     transition: all 0.2s ease;
     box-sizing: border-box;
@@ -60,10 +63,13 @@
     position: absolute;
     top: calc(100% + 8px);
     left: 0;
-    background: #ffffff;
-    border-radius: 16px;
+    
+    /* MODIFICABLE: Contenedor flotante del Calendario (Popover) */
+    background: #ffffff;       /* Color de fondo general del panel del calendario */
+    border-radius: 16px;       /* Radio interior de la "ventana" flotante del calendario */
+    border: 1px solid #e5e7eb; /* Color de borde del contenedor total */
+    
     box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.1);
-    border: 1px solid #e5e7eb;
     padding: 16px;
     width: 320px;
     z-index: 1000;
@@ -149,15 +155,25 @@
     border-radius: 8px;
 }
 
+.pcf-dp-day.disabled {
+    /* MODIFICABLE: Apariencia del día bloqueado por minDate o maxDate */
+    opacity: 0.3;
+    background: transparent !important;
+    cursor: not-allowed;
+    text-decoration: line-through;
+}
+
 .pcf-dp-day.selected {
-    background: #3b82f6 !important;
-    color: white;
+    /* MODIFICABLE: Día seleccionado (clic inicial y final) */
+    background: #3b82f6 !important; /* Color de fondo azul (día activo) */
+    color: white;                   /* Color del número para dicho día */
+    border-radius: 8px;             /* Radio (esquinas) del circulito o cuadrito del día */
     font-weight: bold;
-    border-radius: 8px;
 }
 
 .pcf-dp-day.in-range {
-    background: #eff6ff;
+    /* MODIFICABLE: Días intermedios entre fecha inicio y fecha fin */
+    background: #eff6ff; /* Fondo celeste suave (trail de selección) */
     border-radius: 0;
 }
 
@@ -223,22 +239,23 @@
 
 .pcf-dp-btn-cancel {
     background: none;
-    border: 1px solid #d1d5db;
-    color: #374151;
+    border: 1px solid #d1d5db; /* MODIFICABLE: Borde botón cancelar */
+    color: #374151;            /* MODIFICABLE: Texto botón cancelar */
 }
 
 .pcf-dp-btn-cancel:hover {
-    background: #f3f4f6;
+    background: #f3f4f6; /* MODIFICABLE: Color hover cancelar */
 }
 
 .pcf-dp-btn-apply {
-    background: #3b82f6;
+    /* MODIFICABLE: Botón Primario (Aplicar) */
+    background: #3b82f6; /* Color de fondo azul principal */
     border: none;
-    color: white;
+    color: white;        /* Color texto del botón */
 }
 
 .pcf-dp-btn-apply:hover:not(:disabled) {
-    background: #2563eb;
+    background: #2563eb; /* Color hover en botón azul oscuro */
 }
 
 .pcf-dp-btn-apply:disabled {

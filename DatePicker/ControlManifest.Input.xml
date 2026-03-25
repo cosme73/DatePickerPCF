@@ -14,6 +14,21 @@
               description-key="Show time pickers alongside date selection"
               of-type="TwoOptions" usage="input" required="false" />
 
+    <property name="placeholder"
+              display-name-key="Placeholder Text"
+              description-key="Text to display when the input is empty"
+              of-type="SingleLine.Text" usage="input" required="false" />
+
+    <property name="minDate"
+              display-name-key="Desde (Fecha Mínima)"
+              description-key="La fecha más antigua permitida"
+              of-type="DateAndTime.DateOnly" usage="input" required="false" />
+
+    <property name="maxDate"
+              display-name-key="Hasta (Fecha Máxima)"
+              description-key="La fecha más futura permitida"
+              of-type="DateAndTime.DateOnly" usage="input" required="false" />
+
     <!-- OUTPUTS -->
     <property name="startDate"
               display-name-key="Start Date"

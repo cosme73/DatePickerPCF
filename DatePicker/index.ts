@@ -41,6 +41,13 @@ export class DatePicker implements ComponentFramework.StandardControl<IInputs, I
         const allowTime = rawAllow === true || rawAllow === "true" || rawAllow === "1";
         
         const isControlDisabled = context.mode.isControlDisabled;
+        const placeholderRaw = context.parameters.placeholder?.raw;
+        const placeholderText = placeholderRaw ? placeholderRaw : undefined;
+
+        const minDateParam = context.parameters.minDate?.raw;
+        const maxDateParam = context.parameters.maxDate?.raw;
+        const minDate = minDateParam ? minDateParam : undefined;
+        const maxDate = maxDateParam ? maxDateParam : undefined;
 
         // Reset check: Edge detection (false -> true)
         if (triggerReset && !this._prevTriggerReset) {
@@ -57,6 +64,9 @@ export class DatePicker implements ComponentFramework.StandardControl<IInputs, I
             isDisabled: isControlDisabled,
             allocatedWidth: context.mode.allocatedWidth,
             allocatedHeight: context.mode.allocatedHeight,
+            placeholder: placeholderText,
+            minDate: minDate,
+            maxDate: maxDate,
             onChange: (start?: Date, end?: Date) => {
                 this._startDate = start;
                 this._endDate = end;

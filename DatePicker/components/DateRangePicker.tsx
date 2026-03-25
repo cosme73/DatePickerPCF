@@ -1,8 +1,12 @@
 import * as React from "react";
 import { useState, useRef, useEffect } from "react";
+// createPortal nos permite renderizar el calendario fuera del contenedor principal de PCF
+// directamente en el document.body. Esto evita que el calendario sea ocultado
+// si el contenedor de Power Apps es muy pequeño (overflow: hidden).
+import { createPortal } from "react-dom";
 import {
     format, addMonths, subMonths, startOfMonth, endOfMonth, eachDayOfInterval,
-    isSameDay, isWithinInterval, isBefore, isAfter, setHours, setMinutes
+    isSameDay, isWithinInterval, isBefore, isAfter, setHours, setMinutes, startOfDay
 } from "date-fns";
 import { es } from "date-fns/locale";
 
@@ -13,6 +17,9 @@ export interface IDateRangePickerProps {
     isDisabled: boolean;
     allocatedWidth: number;
     allocatedHeight: number;
+    placeholder?: string;
+    minDate?: Date;
+    maxDate?: Date;
     onChange: (start?: Date, end?: Date) => void;
 }
 
@@ -23,6 +30,9 @@ export const DateRangePicker: React.FC<IDateRangePickerProps> = ({
     isDisabled,
     allocatedWidth,
     allocatedHeight,
+    placeholder,
+    minDate,
+    maxDate,
     onChange
 }) => {
     const [isOpen, setIsOpen] = useState(false);
@@ -40,6 +50,22 @@ export const DateRangePicker: React.FC<IDateRangePickerProps> = ({
     const [endMin, setEndMin] = useState(endDate ? format(endDate, "mm") : "59");
 
     const containerRef = useRef<HTMLDivElement>(null);
+    const inputRef = useRef<HTMLDivElement>(null);
+    const popoverRef = useRef<HTMLDivElement>(null);
+    
+    // Estado para guardar la fuente (font) configurada en Power Apps
+    const [computedFont, setComputedFont] = useState("inherit");
+    
+    // Estado para guardar las coordenadas top y left donde se dibujará el calendario
+    const [popoverCoords, setPopoverCoords] = useState({ top: 0, left: 0 });
+
+    // Extraer la fuente de Power Apps del contenedor cuando el componente carga
+    useEffect(() => {
+        if (containerRef.current) {
+            const font = window.getComputedStyle(containerRef.current).fontFamily;
+            if (font) setComputedFont(font);
+        }
+    }, []);
 
     // Sincronizar propiedades externas cuando se cierra y el usuario recibe nuevos datos de PCF
     useEffect(() => {
@@ -58,15 +84,45 @@ export const DateRangePicker: React.FC<IDateRangePickerProps> = ({
         }
     }, [startDate, endDate, isOpen]);
 
+    // Cuando el calendario se abre, calculamos las coordenadas exactas del elemento input
+    // para fijar la posición (fixed) del calendario justo debajo (rect.bottom) de este.
     useEffect(() => {
+        if (isOpen && inputRef.current) {
+            const rect = inputRef.current.getBoundingClientRect();
+            setPopoverCoords({
+                top: rect.bottom, 
+                left: rect.left
+            });
+        }
+    }, [isOpen]);
+
+    useEffect(() => {
+        const handleScroll = (e: Event) => {
+            // Evitar cerrar si el evento de scroll viene desde dentro del calendario
+            if (popoverRef.current && popoverRef.current.contains(e.target as Node)) {
+                return;
+            }
+            if (isOpen) setIsOpen(false);
+        };
         const handleClickOutside = (e: MouseEvent) => {
-            if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+            if (
+                inputRef.current && !inputRef.current.contains(e.target as Node) &&
+                popoverRef.current && !popoverRef.current.contains(e.target as Node)
+            ) {
                 setIsOpen(false);
             }
         };
+
+        if (isOpen) {
+            window.addEventListener("scroll", handleScroll, true);
+        }
         document.addEventListener("mousedown", handleClickOutside);
-        return () => document.removeEventListener("mousedown", handleClickOutside);
-    }, []);
+        
+        return () => {
+            window.removeEventListener("scroll", handleScroll, true);
+            document.removeEventListener("mousedown", handleClickOutside);
+        };
+    }, [isOpen]);
 
     const toggleOpen = () => {
         if (!isDisabled) setIsOpen(!isOpen);
@@ -141,6 +197,9 @@ export const DateRangePicker: React.FC<IDateRangePickerProps> = ({
                     let isRange = false;
                     const isToday = isSameDay(day, new Date());
                     
+                    const dayStart = startOfDay(day);
+                    const disabledDay = (minDate && dayStart < startOfDay(minDate)) || (maxDate && dayStart > startOfDay(maxDate));
+                    
                     if (selStart && isSameDay(day, selStart)) isSelected = true;
                     if (selEnd && isSameDay(day, selEnd)) isSelected = true;
                     
@@ -153,9 +212,9 @@ export const DateRangePicker: React.FC<IDateRangePickerProps> = ({
                     return (
                         <div 
                             key={day.toString()} 
-                            className={`pcf-dp-day ${isSelected ? "selected" : ""} ${isRange && !isSelected ? "in-range" : ""} ${isToday && !isSelected ? "today" : ""}`}
-                            onClick={() => handleDayClick(day)}
-                            onMouseEnter={() => setHoverDate(day)}
+                            className={`pcf-dp-day ${isSelected ? "selected" : ""} ${isRange && !isSelected ? "in-range" : ""} ${isToday && !isSelected ? "today" : ""} ${disabledDay ? "disabled" : ""}`}
+                            onClick={disabledDay ? undefined : () => handleDayClick(day)}
+                            onMouseEnter={disabledDay ? undefined : () => setHoverDate(day)}
                         >
                             {format(day, "d")}
                         </div>
@@ -195,21 +254,33 @@ export const DateRangePicker: React.FC<IDateRangePickerProps> = ({
 
     return (
         <div className={`pcf-dp-container ${isDisabled ? "disabled" : ""}`} ref={containerRef} style={containerStyle}>
-            <div className="pcf-dp-input-wrapper" onClick={toggleOpen}>
+            <div className="pcf-dp-input-wrapper" onClick={toggleOpen} ref={inputRef}>
                 <input 
                     type="text" 
                     readOnly 
                     value={getDisplayValue()} 
-                    placeholder="Seleccione rango de fechas"
+                    placeholder={placeholder || "Seleccione rango de fechas"}
                     disabled={isDisabled}
                 />
-                {!isDisabled && (startDate || endDate) && (
-                    <button className="pcf-dp-clear" onClick={clearSelection}>✕</button>
-                )}
             </div>
 
-            {isOpen && (
-                <div className="pcf-dp-popover">
+            {/* 
+                createPortal inyecta el calendario en el body de la página, "sacándolo" del 
+                contenedor de PCF, previniendo que se recorte gráficamente si el input es pequeño.
+                Se usa position: fixed calculado previamente para anclarlo visualmente al input.
+            */}
+            {isOpen && createPortal(
+                <div 
+                    className="pcf-dp-popover" 
+                    ref={popoverRef}
+                    style={{ 
+                        position: "fixed", 
+                        // Sumamos +8px para darle un pequeño margen de separación
+                        top: `${popoverCoords.top + 8}px`, 
+                        left: `${popoverCoords.left}px`,
+                        fontFamily: computedFont
+                    }}
+                >
                     <div className="pcf-dp-header">
                         <button onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}>&lt;</button>
                         <span>{format(currentMonth, "MMMM yyyy", { locale: es })}</span>
@@ -220,8 +291,8 @@ export const DateRangePicker: React.FC<IDateRangePickerProps> = ({
 
                     {allowTime && (
                         <div className="pcf-dp-time-section">
-                            {renderTimePicker("Inicio", startHour, startMin, setStartHour, setStartMin, !selStart)}
-                            {renderTimePicker("Fin", endHour, endMin, setEndHour, setEndMin, !selEnd)}
+                            {renderTimePicker("Desde", startHour, startMin, setStartHour, setStartMin, !selStart)}
+                            {renderTimePicker("Hasta", endHour, endMin, setEndHour, setEndMin, !selEnd)}
                         </div>
                     )}
 
@@ -229,7 +300,8 @@ export const DateRangePicker: React.FC<IDateRangePickerProps> = ({
                         <button className="pcf-dp-btn-cancel" onClick={() => setIsOpen(false)}>Cancelar</button>
                         <button className="pcf-dp-btn-apply" onClick={applySelection} disabled={!selStart}>Aplicar</button>
                     </div>
-                </div>
+                </div>,
+                document.body
             )}
         </div>
     );
