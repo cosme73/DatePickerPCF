@@ -20,7 +20,7 @@ export interface IDateRangePickerProps {
     placeholder?: string;
     minDate?: Date;
     maxDate?: Date;
-    onChange: (start?: Date, end?: Date) => void;
+    onChange: (start?: Date, end?: Date, textStr?: string) => void;
 }
 
 export const DateRangePicker: React.FC<IDateRangePickerProps> = ({
@@ -137,10 +137,24 @@ export const DateRangePicker: React.FC<IDateRangePickerProps> = ({
             // El usuario elije la fecha final. Asegurarse que no sea menor a la de inicio.
             if (isBefore(day, selStart)) {
                 setSelStart(day); // Reinicia inicio
+            } else if (isSameDay(day, selStart)) {
+                // Doble clic: ignoramos el segundo clic en la misma fecha para evitar asignar un fin por accidente
+                setSelEnd(undefined);
             } else {
                 setSelEnd(day);
             }
         }
+    };
+
+    const generateDisplayString = (start?: Date, end?: Date) => {
+        if (!start) return "";
+        const formatStr = allowTime ? "dd/MM/yyyy HH:mm" : "dd/MM/yyyy";
+        const startStr = format(start, formatStr);
+        if (end) {
+            const endStr = format(end, formatStr);
+            return `${startStr} - ${endStr}`;
+        }
+        return startStr;
     };
 
     const applySelection = () => {
@@ -154,26 +168,15 @@ export const DateRangePicker: React.FC<IDateRangePickerProps> = ({
             finalEnd = setMinutes(setHours(finalEnd, parseInt(endHour, 10)), parseInt(endMin, 10));
         }
 
-        onChange(finalStart, finalEnd);
+        onChange(finalStart, finalEnd, generateDisplayString(finalStart, finalEnd));
         setIsOpen(false);
     };
 
     const clearSelection = (e: React.MouseEvent) => {
         e.stopPropagation();
         if (isDisabled) return;
-        onChange(undefined, undefined);
+        onChange(undefined, undefined, "");
         setIsOpen(false);
-    };
-
-    const getDisplayValue = () => {
-        if (!startDate) return "";
-        const formatStr = allowTime ? "dd/MM/yyyy HH:mm" : "dd/MM/yyyy";
-        const startStr = format(startDate, formatStr);
-        if (endDate) {
-            const endStr = format(endDate, formatStr);
-            return `${startStr} - ${endStr}`;
-        }
-        return startStr;
     };
 
     const renderMonth = () => {
@@ -258,7 +261,7 @@ export const DateRangePicker: React.FC<IDateRangePickerProps> = ({
                 <input 
                     type="text" 
                     readOnly 
-                    value={getDisplayValue()} 
+                    value={generateDisplayString(startDate, endDate)} 
                     placeholder={placeholder || "Seleccione rango de fechas"}
                     disabled={isDisabled}
                 />

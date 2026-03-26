@@ -30,6 +30,11 @@
               of-type="DateAndTime.DateOnly" usage="input" required="false" />
 
     <!-- OUTPUTS -->
+    <property name="selectedDateText"
+              display-name-key="Selected Date Text"
+              description-key="Formatted string of dates. Acts as OnChange trigger."
+              of-type="SingleLine.Text" usage="output" required="false" />
+
     <property name="startDate"
               display-name-key="Start Date"
               description-key="Selected start date/time"

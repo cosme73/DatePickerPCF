@@ -8,6 +8,7 @@ export class DatePicker implements ComponentFramework.StandardControl<IInputs, I
     private _notifyOutputChanged: () => void;
     private _startDate: Date | undefined;
     private _endDate: Date | undefined;
+    private _selectedDateText = "";
     private _prevTriggerReset = false;
     private _root: Root;
 
@@ -53,6 +54,7 @@ export class DatePicker implements ComponentFramework.StandardControl<IInputs, I
         if (triggerReset && !this._prevTriggerReset) {
             this._startDate = undefined;
             this._endDate = undefined;
+            this._selectedDateText = "";
             this._notifyOutputChanged();
         }
         this._prevTriggerReset = triggerReset;
@@ -67,9 +69,10 @@ export class DatePicker implements ComponentFramework.StandardControl<IInputs, I
             placeholder: placeholderText,
             minDate: minDate,
             maxDate: maxDate,
-            onChange: (start?: Date, end?: Date) => {
+            onChange: (start?: Date, end?: Date, textStr?: string) => {
                 this._startDate = start;
                 this._endDate = end;
+                this._selectedDateText = textStr || "";
                 this._notifyOutputChanged();
             }
         };
@@ -79,8 +82,9 @@ export class DatePicker implements ComponentFramework.StandardControl<IInputs, I
 
     public getOutputs(): IOutputs {
         return {
-            startDate: this._startDate,
-            endDate: this._endDate
+            selectedDateText: this._selectedDateText,
+            startDate: this._startDate ?? (null as unknown as Date),
+            endDate: this._endDate ?? (null as unknown as Date)
         };
     }
 
